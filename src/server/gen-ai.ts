@@ -13,7 +13,7 @@ export const getRequirementCapture = async (data: any) => {
     const formData = new FormData();
     formData.append("file", data);
     const response = await axios.post(
-      `${URL}/api/web-bff/requirement-capture`,
+      `${URL}/api/requirement-capture`,
       formData,
       {
         headers: {
@@ -47,7 +47,7 @@ export const getDocumentGenerationBedRock = async (
     const formData = new FormData();
     formData.append("file", data);
     const response = await axios.post(
-      `${URL}/api/web-bff/document-generation-bedrock?message=${message}`,
+      `${URL}/api/document-generation-bedrock?message=${message}`,
       formData,
       {
         headers: {

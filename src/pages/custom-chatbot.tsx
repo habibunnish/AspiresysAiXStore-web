@@ -71,7 +71,7 @@ export default function Customchatbot() {
       const flowAliasId =
         param === "composable-commerce" ? "A9BPVK1C3R" : "2PGRJZR3RB";
       const response = await fetchWithToken(
-        `${import.meta.env.VITE_SERVER_BASE_URL}/api/web-bff/chatStream`,
+        `${import.meta.env.VITE_SERVER_BASE_URL}/api/chatStream`,
         {
           method: "POST",
           body: JSON.stringify({
@@ -100,9 +100,7 @@ export default function Customchatbot() {
 
     try {
       const response = await fetchWithToken(
-        `${
-          import.meta.env.VITE_SERVER_BASE_URL
-        }/api/web-bff/chatStream/${jobId}`
+        `${import.meta.env.VITE_SERVER_BASE_URL}/api/chatStream/${jobId}`
       );
 
       if (response.status === "completed") {

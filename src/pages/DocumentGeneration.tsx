@@ -122,9 +122,7 @@ export default function DocumentGeneration() {
 
     try {
       const response = await fetchWithToken(
-        `${
-          import.meta.env.VITE_SERVER_BASE_URL
-        }/api/web-bff/chatStream/${jobId}`
+        `${import.meta.env.VITE_SERVER_BASE_URL}/api/chatStream/${jobId}`
       );
       if (response.status === "completed") {
         setResponse(response.data?.outputEvents?.["Event 1"]?.content);

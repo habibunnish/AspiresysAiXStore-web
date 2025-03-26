@@ -48,16 +48,12 @@ export default function Login() {
       // const URL = "http://localhost:5000";
       const URL = import.meta.env.VITE_SERVER_BASE_URL;
 
-      const response = await axios.post(
-        `${URL}/api/web-bff/customers/login`,
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      const response = await axios.post(`${URL}/api/customers/login`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
       if (response.status === 200) {
         navigate("/chats");

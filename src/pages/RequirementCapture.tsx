@@ -48,9 +48,7 @@ export default function RequirementCapture() {
 
     try {
       const response = await fetchWithToken(
-        `${
-          import.meta.env.VITE_SERVER_BASE_URL
-        }/api/web-bff/chatStream/${jobId}`
+        `${import.meta.env.VITE_SERVER_BASE_URL}/api/chatStream/${jobId}`
       );
       console.log("first");
       if (response.status === "completed") {
