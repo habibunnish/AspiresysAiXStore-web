@@ -70,10 +70,22 @@ export default function Customchatbot() {
         param === "composable-commerce" ? "IS00QDXMCO" : "3VUX9NHM6Z";
       const flowAliasId =
         param === "composable-commerce" ? "A9BPVK1C3R" : "2PGRJZR3RB";
-      const response = await fetchWithToken(
+
+      const token = await getAccessToken();
+      if (!token) throw new Error("Failed to fetch token");
+
+      // Add new chat message with empty response
+      setChatHistory((prev) => [...prev, { query: input, response: "" }]);
+      setInput("");
+
+      const response = await fetch(
         `${import.meta.env.VITE_SERVER_BASE_URL}/api/chatStream`,
         {
           method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           body: JSON.stringify({
             flowId,
             flowAliasId,
@@ -82,13 +94,40 @@ export default function Customchatbot() {
         }
       );
 
-      if (response.jobId) {
-        setJobId(response.jobId);
-        setChatHistory((prev) => [...prev, { query: input, response: "" }]);
-        setInput("");
-      } else {
-        throw new Error("Invalid job ID received");
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader available");
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // Convert the chunk to text
+        const chunk = new TextDecoder().decode(value);
+
+        // Parse the SSE format
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data:")) {
+            try {
+              const jsonData = JSON.parse(line.slice(5)); // Remove 'data:' prefix
+              const responseContent = jsonData.data;
+
+              // Update the last message's response
+              setChatHistory((prev) =>
+                prev.map((chat, index) =>
+                  index === prev.length - 1
+                    ? { ...chat, response: responseContent }
+                    : chat
+                )
+              );
+            } catch (e) {
+              console.error("Error parsing JSON:", e);
+            }
+          }
+        }
       }
+
+      setLoading(false);
     } catch (error) {
       console.error("Error sending message to chatbot:", error);
       setLoading(false);

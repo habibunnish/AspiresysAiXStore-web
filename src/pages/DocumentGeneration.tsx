@@ -83,24 +83,63 @@ export default function DocumentGeneration() {
     if (isLoading) return;
 
     setIsLoading(true);
-    // setError(null);
     setResponse("");
 
     try {
-      const res = await getDocumentGenerationBedRock(selectedFile, data.query);
-      console.log(res);
-      const jobId = res.jobId;
-      setJobId(jobId);
-      return;
-    } catch (error) {
-      let errorMessage = "An unexpected error occurred";
-      if (axios.isAxiosError(error)) {
-        errorMessage = error.response?.data?.error || error.message;
-      } else if (error instanceof Error) {
-        errorMessage = error.message;
+      const token = await getAccessToken();
+      if (!token) throw new Error("Failed to fetch token");
+
+      const URL = import.meta.env.VITE_SERVER_BASE_URL;
+      const formData = new FormData();
+      formData.append("file", selectedFile);
+      formData.append("message", data.query);
+
+      const response = await fetch(`${URL}/api/document-generation-bedrock`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error("Failed to generate document");
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader available");
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // Convert the chunk to text
+        const chunk = new TextDecoder().decode(value);
+
+        // Parse the SSE format
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data:")) {
+            try {
+              const jsonData = JSON.parse(line.slice(5)); // Remove 'data:' prefix
+              const responseContent = jsonData.data;
+
+              // Update the response state
+              setResponse(responseContent);
+            } catch (e) {
+              console.error("Error parsing JSON:", e);
+            }
+          }
+        }
       }
-      console.log("Error:", errorMessage);
-      // setError(errorMessage);
+
+      // Clear form and reset states after successful completion
+      reset();
+      setSelectedFile(null);
+      setKey((p) => p + 1);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error generating document:", error);
+      setResponse("Error processing content");
+      setIsLoading(false);
     }
   };
 

@@ -4,7 +4,6 @@ import { getAccessToken } from "@/utils/getAccessToken";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { getRequirementCapture } from "@/server/gen-ai";
 import { Icon } from "@iconify/react/dist/iconify.js";
 
 export const formatStringToHtml = (str: string) => {
@@ -100,20 +99,70 @@ export default function RequirementCapture() {
     if (file) setInput(file);
   };
 
-  const handleFileUpload = () => {
+  const handleFileUpload = async () => {
     if (!input) return;
     setLoading(true);
-    getRequirementCapture(input)
-      .then((res) => {
-        setJobId(res.jobId);
-        setChatHistory((prev) => [
-          ...prev,
-          { query: input.name, response: "" },
-        ]);
-      })
-      .catch((err) => {
-        console.log(err);
+    try {
+      const token = await getAccessToken();
+      if (!token) throw new Error("Failed to fetch token");
+
+      const URL = import.meta.env.VITE_SERVER_BASE_URL;
+      const formData = new FormData();
+      formData.append("file", input);
+
+      const response = await fetch(`${URL}/api/requirement-capture`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
       });
+
+      if (!response.ok) throw new Error("Upload failed");
+
+      // Add new chat message with empty response
+      setChatHistory((prev) => [...prev, { query: input.name, response: "" }]);
+      setInput(null);
+      setKey((k) => k + 1);
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error("No reader available");
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        // Convert the chunk to text
+        const chunk = new TextDecoder().decode(value);
+
+        // Parse the SSE format
+        const lines = chunk.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data:")) {
+            try {
+              const jsonData = JSON.parse(line.slice(5)); // Remove 'data:' prefix
+              const responseContent = jsonData.data;
+
+              // Update the last message's response
+              setChatHistory((prev) =>
+                prev.map((chat, index) =>
+                  index === prev.length - 1
+                    ? { ...chat, response: responseContent }
+                    : chat
+                )
+              );
+            } catch (e) {
+              console.error("Error parsing JSON:", e);
+            }
+          }
+        }
+      }
+
+      setLoading(false);
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      setLoading(false);
+    }
   };
 
   return (
@@ -201,11 +250,11 @@ export default function RequirementCapture() {
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-word",
                       }}
-                      // dangerouslySetInnerHTML={{
-                      //   __html: formatStringToHtml(chat?.response),
-                      // }}
+                      dangerouslySetInnerHTML={{
+                        __html: formatStringToHtml(chat?.response),
+                      }}
                     >
-                      {chat.response}
+                      {/* {chat.response} */}
                     </div>
                     <div className="w-full h-[1px] mt-2 bg-slate-300"></div>
                   </div>
