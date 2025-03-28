@@ -6,9 +6,7 @@ import sendButtonIcon from "@/assets/chat-page-image/send-button-icon.png";
 import chatPageRobot from "@/assets/chat-page-image/bot-chat-logo.png";
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
-import axios from "axios";
 import { Paperclip } from "lucide-react";
-import { getDocumentGenerationBedRock } from "@/server/gen-ai";
 import { getAccessToken } from "@/utils/getAccessToken";
 
 const formatStringToHtml = (str: string) => {
