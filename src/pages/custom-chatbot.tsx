@@ -2,11 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { getAccessToken } from "@/utils/getAccessToken";
 import { Icon } from "@iconify/react";
 import { useSearchParams } from "react-router";
-import { useAppSelector } from "@/redux/hooks";
-import {
-  selectCustomerId,
-  selectIsCustomerIdSelected,
-} from "@/redux/slices/userSlice";
 import { useToast } from "@/hooks/use-toast";
 
 const formatStringToHtml = (str: string) => {
@@ -41,8 +36,7 @@ export default function Customchatbot() {
   const [searchParams] = useSearchParams();
   const param = searchParams.get("param");
   const storeCode = searchParams.get("storeCode") || "aspiresys-ai-xstore";
-  const selectedEmail = useAppSelector(selectCustomerId);
-  const isEmailSelected = useAppSelector(selectIsCustomerIdSelected);
+
   const { toast } = useToast();
 
   const fetchWithToken = async (url: string, options = {}) => {
@@ -73,14 +67,6 @@ export default function Customchatbot() {
 
   const getChatData = async () => {
     if (!input.trim()) return;
-    if (!isEmailSelected) {
-      toast({
-        title: "Name Required",
-        description: "Please select a name before submitting",
-        variant: "destructive",
-      });
-      return;
-    }
 
     setLoading(true);
     try {
@@ -99,7 +85,7 @@ export default function Customchatbot() {
               input: input.trim(),
               storeCode: storeCode,
             },
-            customerId: selectedEmail,
+            customerId: localStorage.getItem("customerId"),
           }),
         }
       );
@@ -313,14 +299,12 @@ export default function Customchatbot() {
                 onClick={getChatData}
                 style={{
                   ...styles.submitButton,
-                  backgroundColor:
-                    loading || !isEmailSelected ? "#cccccc" : "purple",
-                  cursor:
-                    loading || !isEmailSelected ? "not-allowed" : "pointer",
-                  opacity: loading || !isEmailSelected ? 0.6 : 1,
+                  backgroundColor: loading ? "#cccccc" : "purple",
+                  cursor: loading ? "not-allowed" : "pointer",
+                  opacity: loading ? 0.6 : 1,
                 }}
-                disabled={loading || !isEmailSelected}
-                title={!isEmailSelected ? "Please select a name first" : "Send"}
+                disabled={loading}
+                title={loading ? "Please select a name first" : "Send"}
               >
                 ➤
               </button>
