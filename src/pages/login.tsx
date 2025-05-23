@@ -11,13 +11,15 @@ import leftQuote from "@/assets/login-page-image/quote-left.png";
 import rightQuote from "@/assets/login-page-image/quote-right.png";
 import { getAccessToken } from "@/utils/getAccessToken";
 import Header from "@/components/header";
-
+import { setCustomerId } from "@/redux/slices/userSlice";
+import { useDispatch } from "react-redux";
 interface FormValues {
   email: string;
   password: string;
 }
 
 export default function Login() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const {
     register,
@@ -60,7 +62,8 @@ export default function Login() {
       );
 
       if (response.status === 200) {
-        navigate("/chats");
+        dispatch(setCustomerId(email));
+        navigate("/DocumentGeneration?storeCode=aspiresys-ai-xstore-docGen");
         reset();
       } else {
         console.error("Failed to login user:", response.data);

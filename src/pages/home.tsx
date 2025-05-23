@@ -6,13 +6,15 @@ const Home = () => {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname === "/") {
+    const customerId = localStorage.getItem("customerId");
+    if (!customerId) {
       navigate("/login");
+    } else {
+      navigate("/DocumentGeneration?storeCode=aspiresys-ai-xstore-docGen");
     }
   }, [location.pathname, navigate]);
 
   return null;
-
 };
 
 export default Home;
