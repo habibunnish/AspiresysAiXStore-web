@@ -180,6 +180,14 @@ export default function Register() {
                 Cancel
               </Button>
             </div>
+            <div className=" text-sm text-[#000000] hover:underline">
+              <div
+                className="cursor-pointer"
+                onClick={() => navigate("/login")}
+              >
+                Already have an account? Login
+              </div>
+            </div>
           </form>
         </div>
         {/* Illustration Section */}
